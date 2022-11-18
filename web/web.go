@@ -3,12 +3,14 @@ package web
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/simple-distributed-project/web/model/controller/controller"
 )
 
 func StartService() {
-	http.HandleFunc("/", Home)
-	http.HandleFunc("/login", login)
-	http.HandleFunc("/register", register)
+	http.HandleFunc("/", *controller.Home)
+	http.HandleFunc("/login", *controller.login)
+	http.HandleFunc("/register", *controller.register)
 
 	err := http.ListenAndServe(":9000", nil) // set listen port
 	if err != nil {
