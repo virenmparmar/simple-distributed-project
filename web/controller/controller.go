@@ -7,7 +7,7 @@ import (
 )
 
 func Home(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("github.com//web/template/index.html")
+	t, err := template.ParseFiles("../template/index.html")
 	if err != nil {
 		log.Println(err)
 	}

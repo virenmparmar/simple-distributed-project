@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/simple-distributed-project/web/model/controller/controller"
+	"github.com/simple-distributed-project/web/controller"
 )
 
 func StartService() {
-	http.HandleFunc("/", *controller.Home)
-	http.HandleFunc("/login", *controller.login)
-	http.HandleFunc("/register", *controller.register)
+	http.HandleFunc("/", controller.Home)
+	http.HandleFunc("/login", controller.Login)
+	http.HandleFunc("/register", controller.Register)
 
 	err := http.ListenAndServe(":9000", nil) // set listen port
 	if err != nil {
