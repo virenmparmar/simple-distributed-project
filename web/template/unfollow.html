@@ -4,13 +4,14 @@
     </head>
     <body>
         <h1> Hi User</h1>
+        <a href="/profile">Profile</a>
         <h2 style="color:red">{{.Error}}</h2>
         <h2 style="color: green">{{.Success}}</h2>
         <h3>Click on the user you want to Unfollow. </h3>
         <!-- Iterate through the list of strings. -->
         {{range .Users }} 
-            <form action="/startunfollow" method="post">
-                <button type="submit" name="unfollow" value="{{.}}">{{.}}</button>
+            <form action="/unfollow" method="post">
+                <button type="submit" name="stopfollow" value="{{.}}">{{.}}</button>
             </form>
         {{end}}
 

@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	userService "github.com/simple-distributed-project/web/auth/service"
-	util "github.com/simple-distributed-project/web/auth/util"
 )
 
 func Register(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +62,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func Logout(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Logout")
+	err := userService.Logout(w, r)
+	if err != nil {
+		fmt.Println(err)
+	}
+	http.Redirect(w, r, "/login", http.StatusFound)
+	return
+}
+
 func Home(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Home")
 	fmt.Println(r.Method)
@@ -88,9 +97,8 @@ func Follow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == "GET" {
+		fmt.Println("Follow in get method")
 		users, err := userService.GetUsersToFollow(r)
-		data := util.ConvertUserstoHTML(users)
-		fmt.Print(data)
 		if err != nil {
 			fmt.Println(err)
 			m["Error"] = err.Error()
@@ -98,26 +106,20 @@ func Follow(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			m := make(map[string]interface{})
-			t.Funcs(template.FuncMap{
-				"inc": func(i int) int {
-					return i + 1
-				},
-			})
 			m["Users"] = users
 			t.Execute(w, m)
 			return
 		}
 	} else {
-		users, err := userService.GetUsersToFollow(r)
-		data := util.ConvertUserstoHTML(users)
-		fmt.Print(data)
+		fmt.Print("Follow in post method")
+		err := userService.StartFollowing(r)
 		if err != nil {
 			fmt.Println(err)
 			m["Error"] = err.Error()
-			t.Execute(w, m)
+			http.Redirect(w, r, "/follow", http.StatusFound)
 			return
 		} else {
-			m["Success"] = "Followed"
+			m["Success"] = "Started Following"
 			http.Redirect(w, r, "/follow", http.StatusFound)
 			return
 		}
@@ -134,8 +136,6 @@ func Unfollow(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method == "GET" {
 		users, err := userService.GetUsersToUnfollow(r)
-		data := util.ConvertUserstoHTML(users)
-		fmt.Print(data)
 		if err != nil {
 			fmt.Println(err)
 			m["Error"] = err.Error()
@@ -143,52 +143,48 @@ func Unfollow(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			m := make(map[string]interface{})
-			t.Funcs(template.FuncMap{
-				"inc": func(i int) int {
-					return i + 1
-				},
-			})
 			m["Users"] = users
 			t.Execute(w, m)
 			return
 		}
 	} else {
-		users, err := userService.GetUsersToUnfollow(r)
-		data := util.ConvertUserstoHTML(users)
-		fmt.Print(data)
+		fmt.Println("Unfollow in post method")
+		err := userService.StopFollowing(r)
 		if err != nil {
 			fmt.Println(err)
 			m["Error"] = err.Error()
 			t.Execute(w, m)
 			return
 		} else {
-			m["Success"] = "Unfollowed"
+			m["Success"] = "Started Following"
 			http.Redirect(w, r, "/unfollow", http.StatusFound)
 			return
 		}
 	}
 }
 
-func Startfollow(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("startfollow")
+func Tweet(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Tweet")
 	m := make(map[string]string)
-	_, err := template.ParseFiles("web/template/follow.html")
+	t, err := template.ParseFiles("web/template/profile.html")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	if r.Method == "GET" {
+		t.Execute(w, m)
 		return
 	} else {
-		err := userService.StartFollowing(r)
+		fmt.Println("Tweet in post method")
+		err := userService.Tweet(r)
 		if err != nil {
 			fmt.Println(err)
 			m["Error"] = err.Error()
-			http.Redirect(w, r, "/follow", http.StatusFound)
+			t.Execute(w, m)
 			return
 		} else {
-			m["Success"] = "Started Following"
-			http.Redirect(w, r, "/follow", http.StatusFound)
+			m["Success"] = "Tweeted"
+			t.Execute(w, m)
 			return
 		}
 	}

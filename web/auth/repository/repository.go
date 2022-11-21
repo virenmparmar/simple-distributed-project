@@ -3,6 +3,8 @@ package repository
 import (
 	"fmt"
 
+	uuid "github.com/google/uuid"
+
 	userModel "github.com/simple-distributed-project/web/auth/model"
 	userstorage "github.com/simple-distributed-project/web/auth/storage"
 )
@@ -42,8 +44,12 @@ func UpdateUser(user userModel.User) error {
 
 func GetUsersToFollow(username string) ([]string, error) {
 	users := make([]string, 0)
+	currentUser, err := FindUser(username)
+	if err != nil {
+		return users, err
+	}
 	for _, user := range userstorage.Users {
-		if user.Username != username {
+		if user.Username != username && !contains(currentUser.Followers, user.Username) {
 			users = append(users, user.Username)
 		}
 	}
@@ -57,7 +63,7 @@ func GetUsersToUnfollow(username string) ([]string, error) {
 		return users, err
 	}
 	for _, user := range currentUser.Followers {
-		users = append(users, user.Username)
+		users = append(users, user)
 	}
 	return users, nil
 }
@@ -71,10 +77,64 @@ func FollowUser(username string, userToFollow string) error {
 	if err != nil {
 		return fmt.Errorf("User to follow does not exist")
 	}
-	currentUser.Followers = append(currentUser.Followers, user)
+	currentUser.Followers = append(currentUser.Followers, user.Username)
+	err = UpdateUser(currentUser)
+	fmt.Println("I am here")
+	fmt.Println(currentUser.Followers)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UnfollowUser(username string, userToUnfollow string) error {
+	currentUser, err := FindUser(username)
+	if err != nil {
+		return err
+	}
+	user, err := FindUser(userToUnfollow)
+	if err != nil {
+		return fmt.Errorf("User to unfollow does not exist")
+	}
+	currentUser.Followers = remove(currentUser.Followers, user.Username)
 	err = UpdateUser(currentUser)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func SaveTweet(user userModel.User, tweet string) error {
+	resultChan := make(chan bool)
+	id := uuid.New().String()
+	tweetModel := userModel.Tweet{Id: id, Username: user.Username, Tweet: tweet}
+	go userstorage.SaveTweet(user, tweetModel, resultChan)
+	saved := <-resultChan
+	if !saved {
+		return fmt.Errorf("Tweet not saved")
+	}
+	return nil
+}
+
+func remove(s []string, r string) []string {
+	fmt.Println(s)
+	fmt.Println(r)
+	var result []string
+	for _, a := range s {
+		if a != r {
+			result = append(result, a)
+		}
+	}
+	return result
+}
+func contains(s []string, e string) bool {
+	fmt.Println("I am inside contains")
+	fmt.Println(s)
+	fmt.Println(e)
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }

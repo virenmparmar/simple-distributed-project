@@ -4,12 +4,13 @@
     </head>
     <body>
         <h1> Hi User</h1>
+        <a href="/profile">Profile</a>
         <h2 style="color:red">{{.Error}}</h2>
         <h2 style="color: green">{{.Success}}</h2>
         <h3>Click on the user you want to follow. </h3>
         <!-- Iterate through the list of strings. -->
         {{range .Users }} 
-            <form action="/startfollow" method="post">
+            <form action="/follow" method="post">
                 <button type="submit" name="startfollow" value="{{.}}">{{.}}</button>
             </form>
         {{end}}

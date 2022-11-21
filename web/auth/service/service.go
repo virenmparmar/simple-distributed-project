@@ -3,6 +3,8 @@ package service
 import (
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	userrepo "github.com/simple-distributed-project/web/auth/repository"
 	bcrypt "golang.org/x/crypto/bcrypt"
@@ -14,7 +16,7 @@ func RegisterService(r *http.Request) error {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	fmt.Println(username, password)
-	user, err := userrepo.FindUser(username)
+	user, err := userrepo.FindUser(strings.TrimSpace(username))
 	if user.Username == username {
 		return fmt.Errorf("User already exists")
 	}
@@ -27,7 +29,7 @@ func RegisterService(r *http.Request) error {
 	}
 	password = string(hash)
 
-	err = userrepo.CreateUser(username, password)
+	err = userrepo.CreateUser(strings.TrimSpace(username), password)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -40,7 +42,7 @@ func LoginService(w http.ResponseWriter, r *http.Request) error {
 	r.ParseForm()
 	username := r.FormValue("username")
 	password := r.FormValue("password")
-	user, err := userrepo.FindUser(username)
+	user, err := userrepo.FindUser(strings.TrimSpace(username))
 	if err != nil {
 		return err
 	}
@@ -69,9 +71,32 @@ func LoginService(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func Logout(w http.ResponseWriter, r *http.Request) error {
+	username, err := GetUserNameFromToken(r)
+	if err != nil {
+		return err
+	}
+	user, err := userrepo.FindUser(strings.TrimSpace(username))
+	if err != nil {
+		return err
+	}
+	user.Token = ""
+	err = userrepo.UpdateUser(user)
+	if err != nil {
+		return err
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   "",
+		Expires: time.Unix(0, 0),
+	})
+
+	return nil
+}
+
 func GetUsersToFollow(r *http.Request) ([]string, error) {
 	username, err := GetUserNameFromToken(r)
-	users, err := userrepo.GetUsersToFollow(username)
+	users, err := userrepo.GetUsersToFollow(strings.TrimSpace(username))
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +105,7 @@ func GetUsersToFollow(r *http.Request) ([]string, error) {
 
 func GetUsersToUnfollow(r *http.Request) ([]string, error) {
 	username, err := GetUserNameFromToken(r)
-	users, err := userrepo.GetUsersToUnfollow(username)
+	users, err := userrepo.GetUsersToUnfollow(strings.TrimSpace(username))
 	if err != nil {
 		return nil, err
 	}
@@ -96,21 +121,44 @@ func StartFollowing(r *http.Request) error {
 	following := r.FormValue("startfollow")
 	fmt.Println("Following: ", following)
 	fmt.Println("Username: ", username)
-	err = userrepo.FollowUser(username, following)
+	err = userrepo.FollowUser(strings.TrimSpace(username), strings.TrimSpace(following))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func FollowService(r *http.Request) error {
-	// r.ParseForm()
-	// username := r.FormValue("username")
-	// following := r.FormValue("following")
-	// err := userrepo.FollowUser(username, following)
-	// if err != nil {
-	// 	return err
-	// }
+func StopFollowing(r *http.Request) error {
+	r.ParseForm()
+	username, err := GetUserNameFromToken(r)
+	if err != nil {
+		return err
+	}
+	following := r.FormValue("stopfollow")
+	fmt.Println("Following: ", following)
+	fmt.Println("Username: ", username)
+	err = userrepo.UnfollowUser(strings.TrimSpace(username), strings.TrimSpace(following))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func Tweet(r *http.Request) error {
+	r.ParseForm()
+	username, err := GetUserNameFromToken(r)
+	if err != nil {
+		return err
+	}
+	user, err := userrepo.FindUser(strings.TrimSpace(username))
+	if err != nil {
+		return err
+	}
+	tweet := r.FormValue("tweet")
+	err = userrepo.SaveTweet(user, strings.TrimSpace(tweet))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
