@@ -29,3 +29,23 @@ func CreateUser(username string, password string) error {
 	}
 	return nil
 }
+
+func UpdateUser(user userModel.User) error {
+	resultChan := make(chan bool)
+	go userstorage.SaveUser(user, resultChan)
+	saved := <-resultChan
+	if !saved {
+		return fmt.Errorf("User not saved")
+	}
+	return nil
+}
+
+func GetUsersToFollow(username string) ([]string, error) {
+	users := make([]string, 0)
+	for _, user := range userstorage.Users {
+		if user.Username != username {
+			users = append(users, user.Username)
+		}
+	}
+	return users, nil
+}
