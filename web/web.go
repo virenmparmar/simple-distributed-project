@@ -12,7 +12,9 @@ func StartService() {
 	http.HandleFunc("/login", auth_controller.Login)
 	http.HandleFunc("/register", auth_controller.Register)
 	http.HandleFunc("/profile", auth_controller.Profile)
-	http.HandleFunc("/follow?", auth_controller.Follow)
+	http.HandleFunc("/follow", auth_controller.Follow)
+	http.HandleFunc("/unfollow", auth_controller.Unfollow)
+	http.HandleFunc("/startfollow", auth_controller.Startfollow)
 
 	err := http.ListenAndServe(":9000", nil) // set listen port
 	if err != nil {

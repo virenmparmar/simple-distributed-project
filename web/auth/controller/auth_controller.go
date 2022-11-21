@@ -97,13 +97,20 @@ func Follow(w http.ResponseWriter, r *http.Request) {
 			t.Execute(w, m)
 			return
 		} else {
-			m["Users"] = data
+			m := make(map[string]interface{})
+			t.Funcs(template.FuncMap{
+				"inc": func(i int) int {
+					return i + 1
+				},
+			})
+			m["Users"] = users
 			t.Execute(w, m)
 			return
 		}
 	} else {
-		fmt.Println("Follow")
-		err := userService.FollowService(r)
+		users, err := userService.GetUsersToFollow(r)
+		data := util.ConvertUserstoHTML(users)
+		fmt.Print(data)
 		if err != nil {
 			fmt.Println(err)
 			m["Error"] = err.Error()
@@ -111,6 +118,76 @@ func Follow(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			m["Success"] = "Followed"
+			http.Redirect(w, r, "/follow", http.StatusFound)
+			return
+		}
+	}
+}
+
+func Unfollow(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Unfollow")
+	m := make(map[string]string)
+	t, err := template.ParseFiles("web/template/unfollow.html")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if r.Method == "GET" {
+		users, err := userService.GetUsersToUnfollow(r)
+		data := util.ConvertUserstoHTML(users)
+		fmt.Print(data)
+		if err != nil {
+			fmt.Println(err)
+			m["Error"] = err.Error()
+			t.Execute(w, m)
+			return
+		} else {
+			m := make(map[string]interface{})
+			t.Funcs(template.FuncMap{
+				"inc": func(i int) int {
+					return i + 1
+				},
+			})
+			m["Users"] = users
+			t.Execute(w, m)
+			return
+		}
+	} else {
+		users, err := userService.GetUsersToUnfollow(r)
+		data := util.ConvertUserstoHTML(users)
+		fmt.Print(data)
+		if err != nil {
+			fmt.Println(err)
+			m["Error"] = err.Error()
+			t.Execute(w, m)
+			return
+		} else {
+			m["Success"] = "Unfollowed"
+			http.Redirect(w, r, "/unfollow", http.StatusFound)
+			return
+		}
+	}
+}
+
+func Startfollow(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("startfollow")
+	m := make(map[string]string)
+	_, err := template.ParseFiles("web/template/follow.html")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if r.Method == "GET" {
+		return
+	} else {
+		err := userService.StartFollowing(r)
+		if err != nil {
+			fmt.Println(err)
+			m["Error"] = err.Error()
+			http.Redirect(w, r, "/follow", http.StatusFound)
+			return
+		} else {
+			m["Success"] = "Started Following"
 			http.Redirect(w, r, "/follow", http.StatusFound)
 			return
 		}

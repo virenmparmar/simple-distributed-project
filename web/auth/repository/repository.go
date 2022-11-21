@@ -49,3 +49,32 @@ func GetUsersToFollow(username string) ([]string, error) {
 	}
 	return users, nil
 }
+
+func GetUsersToUnfollow(username string) ([]string, error) {
+	users := make([]string, 0)
+	currentUser, err := FindUser(username)
+	if err != nil {
+		return users, err
+	}
+	for _, user := range currentUser.Followers {
+		users = append(users, user.Username)
+	}
+	return users, nil
+}
+
+func FollowUser(username string, userToFollow string) error {
+	currentUser, err := FindUser(username)
+	if err != nil {
+		return err
+	}
+	user, err := FindUser(userToFollow)
+	if err != nil {
+		return fmt.Errorf("User to follow does not exist")
+	}
+	currentUser.Followers = append(currentUser.Followers, user)
+	err = UpdateUser(currentUser)
+	if err != nil {
+		return err
+	}
+	return nil
+}

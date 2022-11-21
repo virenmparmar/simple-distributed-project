@@ -78,6 +78,31 @@ func GetUsersToFollow(r *http.Request) ([]string, error) {
 	return users, nil
 }
 
+func GetUsersToUnfollow(r *http.Request) ([]string, error) {
+	username, err := GetUserNameFromToken(r)
+	users, err := userrepo.GetUsersToUnfollow(username)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func StartFollowing(r *http.Request) error {
+	r.ParseForm()
+	username, err := GetUserNameFromToken(r)
+	if err != nil {
+		return err
+	}
+	following := r.FormValue("startfollow")
+	fmt.Println("Following: ", following)
+	fmt.Println("Username: ", username)
+	err = userrepo.FollowUser(username, following)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func FollowService(r *http.Request) error {
 	// r.ParseForm()
 	// username := r.FormValue("username")
