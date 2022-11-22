@@ -1,0 +1,15 @@
+<html>
+    <head>
+    <title></title>
+    </head>
+    <body>
+        <h1>Hi User</h1>
+          <form action="/tweet" method="post">
+            Enter text:<input type="textarea" name="tweet" maxlength="256">
+            <input type="submit" value="Tweet">
+          </form>
+          <p>
+            {{.Feed}}
+          </p>
+    </body>
+</html>

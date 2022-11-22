@@ -17,6 +17,7 @@ func StartService() {
 	http.HandleFunc("/follow", auth_controller.Follow)
 	http.HandleFunc("/unfollow", auth_controller.Unfollow)
 	http.HandleFunc("/tweet", auth_controller.Tweet)
+	http.HandleFunc("/feed", auth_controller.Feed)
 	http.HandleFunc("/logout", auth_controller.Logout)
 	password := "aa"
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 5)

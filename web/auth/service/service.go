@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -10,6 +11,17 @@ import (
 	bcrypt "golang.org/x/crypto/bcrypt"
 	jwt "gopkg.in/dgrijalva/jwt-go.v3"
 )
+
+func GetToken(c *http.Cookie) (*jwt.Token, error) {
+	tokenString := c.Value
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method")
+		}
+		return []byte("secret"), nil
+	})
+	return token, err
+}
 
 func RegisterService(r *http.Request) error {
 	r.ParseForm()
@@ -105,7 +117,9 @@ func GetUsersToFollow(r *http.Request) ([]string, error) {
 
 func GetUsersToUnfollow(r *http.Request) ([]string, error) {
 	username, err := GetUserNameFromToken(r)
+	log.Println(username)
 	users, err := userrepo.GetUsersToUnfollow(strings.TrimSpace(username))
+	log.Println(users)
 	if err != nil {
 		return nil, err
 	}
@@ -183,4 +197,39 @@ func GetUserNameFromToken(r *http.Request) (string, error) {
 	claims, _ := token.Claims.(jwt.MapClaims)
 	username := claims["username"].(string)
 	return username, nil
+}
+
+func FeedService(r *http.Request) (error, string, string) {
+	username, err := GetUserNameFromToken(r)
+	if err != nil {
+		log.Println(err)
+		// return err
+	}
+	feed := ""
+	user, err := userrepo.FindUser(strings.TrimSpace(username))
+	log.Println("USRER", user)
+	if err != nil {
+		log.Println(err)
+		// return err
+	}
+	log.Println(user.Followers)
+	for e, s := range user.Followers {
+		log.Println(e, s)
+		followUsername := s
+		var val = userrepo.GetTweets(followUsername)
+		log.Println(val)
+		for _, tweet := range val {
+			log.Println(tweet.Tweet)
+			feed = feed + "Tweet By: " + tweet.Username + "\n"
+			feed = feed + tweet.Tweet
+			feed = feed + "\n"
+		}
+		feed = feed + "\n"
+	}
+	log.Println(feed)
+	if feed != "" {
+		return nil, "", feed
+	} else {
+		return nil, "No feed", ""
+	}
 }

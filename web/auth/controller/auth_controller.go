@@ -3,8 +3,10 @@ package controller
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 
+	"github.com/simple-distributed-project/web/auth/service"
 	userService "github.com/simple-distributed-project/web/auth/service"
 )
 
@@ -68,6 +70,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	http.Redirect(w, r, "/login", http.StatusFound)
 	return
 }
@@ -78,8 +81,15 @@ func Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func Profile(w http.ResponseWriter, r *http.Request) {
+	username, err := userService.GetUserNameFromToken(r)
+	log.Println(username, err)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+	}
+
 	fmt.Println("Profile")
 	m := make(map[string]string)
+	m["username"] = username
 	t, err := template.ParseFiles("web/template/profile.html")
 	if err != nil {
 		fmt.Println(err)
@@ -89,7 +99,6 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 }
 
 func Follow(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Follow")
 	m := make(map[string]string)
 	t, err := template.ParseFiles("web/template/follow.html")
 	if err != nil {
@@ -99,6 +108,10 @@ func Follow(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		fmt.Println("Follow in get method")
 		users, err := userService.GetUsersToFollow(r)
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
 		if err != nil {
 			fmt.Println(err)
 			m["Error"] = err.Error()
@@ -137,6 +150,10 @@ func Unfollow(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		users, err := userService.GetUsersToUnfollow(r)
 		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
+		if err != nil {
 			fmt.Println(err)
 			m["Error"] = err.Error()
 			t.Execute(w, m)
@@ -167,8 +184,15 @@ func Tweet(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Tweet")
 	m := make(map[string]string)
 	t, err := template.ParseFiles("web/template/profile.html")
+
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+	users, err := userService.GetUserNameFromToken(r)
+	log.Println(users, err)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 	if r.Method == "GET" {
@@ -187,5 +211,46 @@ func Tweet(w http.ResponseWriter, r *http.Request) {
 			t.Execute(w, m)
 			return
 		}
+	}
+}
+
+func redirectToLogin(w http.ResponseWriter) {
+	t, _ := template.ParseFiles("login.gtpl")
+	m := map[string]interface{}{}
+	m["Error"] = "Please login to continue!"
+	m["Success"] = nil
+	log.Println("Please login to continue")
+	t.Execute(w, m)
+}
+
+func Feed(w http.ResponseWriter, r *http.Request) {
+
+	t, _ := template.ParseFiles("web/template/feed.html")
+	m := map[string]interface{}{}
+	users, erro := userService.GetUserNameFromToken(r)
+	log.Println(users, erro)
+	if erro != nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	loginerr, err, feed := service.FeedService(r)
+
+	if loginerr != nil {
+		redirectToLogin(w)
+		return
+	} else if err != "" {
+		m["Error"] = err
+		m["Success"] = nil
+		log.Println(err)
+		t.Execute(w, m)
+		return
+	} else {
+		m["Error"] = nil
+		m["Success"] = nil
+		m["Feed"] = feed
+		log.Println("Feed Succesfull")
+		t.Execute(w, m)
+		return
 	}
 }

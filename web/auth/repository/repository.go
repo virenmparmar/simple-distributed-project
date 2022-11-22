@@ -138,3 +138,18 @@ func contains(s []string, e string) bool {
 	}
 	return false
 }
+
+func GetTweets(username string) []userModel.Tweet {
+	// users := make([]string, 0)
+	// currentUser, err := FindUser(username)
+	// if err != nil {
+	// 	return users, err
+	// }
+	// for _, user := range currentUser.Followers {
+	// 	users = append(users, user)
+	// }
+	// return users, nil
+	resultChan := make(chan []userModel.Tweet)
+	go userstorage.ReturnTweets(username, resultChan)
+	return <-resultChan
+}
