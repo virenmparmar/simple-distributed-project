@@ -28,7 +28,7 @@ func StartService() {
 
 	err = userrepo.CreateUser("virenmparmar@gmail.com", password)
 	err = userrepo.CreateUser("vmp2018@nyu.edu", password)
-	err = http.ListenAndServe(":9000", nil) // set listen port
+	err = http.ListenAndServe(":8000", nil) // set listen port
 	if err != nil {
 		fmt.Println("ListenAndServe: ", err)
 	} else {

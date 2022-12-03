@@ -5,10 +5,13 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/simple-distributed-project/web/auth/service"
 	userService "github.com/simple-distributed-project/web/auth/service"
 )
+
+var BASE_DIR = os.Getenv("BASE_DIR")
 
 func Register(w http.ResponseWriter, r *http.Request) {
 	m := make(map[string]string)
