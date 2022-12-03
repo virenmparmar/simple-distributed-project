@@ -2,11 +2,17 @@ package web
 
 import (
 	"fmt"
+	"log"
+	"net"
 	"net/http"
 
 	auth_controller "github.com/simple-distributed-project/web/auth/controller"
+	"github.com/simple-distributed-project/web/auth/gapi"
+	"github.com/simple-distributed-project/web/auth/pb"
 	userrepo "github.com/simple-distributed-project/web/auth/repository"
 	bcrypt "golang.org/x/crypto/bcrypt"
+	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func StartService() {
@@ -34,4 +40,24 @@ func StartService() {
 	} else {
 		fmt.Println("Server starts at: localhost:8000")
 	}
+}
+
+func StartGRPCServer() {
+	server, err := gapi.NewServer()
+	if err != nil {
+		log.Fatalf("cannot start server: %v", err)
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterProjectServerServer(grpcServer, server)
+	reflection.Register(grpcServer)
+	lis, err := net.Listen("tcp", ":9000")
+	if err != nil {
+		log.Fatalf("Failed to listen on port 9000: %v", err)
+	}
+
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve gRPC server over port 9000: %v", err)
+	}
+
 }

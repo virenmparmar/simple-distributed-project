@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/simple-distributed-project/web/auth/pb";
+
+
+message registerRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message registerResponse {
+    string message = 1;
+}
+
+service ProjectServer {
+    rpc RegisterService(registerRequest) returns (registerResponse) {};
+    rpc LoginService(loginRequest) returns (loginResponse) {};
+    rpc Logout(logoutRequest) returns (logoutResponse) {};
+    rpc GetUsersToFollow(getUsersToFollowRequest) returns (getUsersToFollowResponse) {};
+    rpc GetUsersToUnfollow(getUsersToUnFollowRequest) returns (getUsersToUnFollowResponse) {};
+    rpc StartFollowing(startFollowingRequest) returns (startFollowingResponse) {};
+    rpc StopFollowing(stopFollowingRequest) returns (stopFollowingResponse) {};
+    rpc Tweet(tweetRequest) returns (tweetResponse) {};
+    rpc FeedService(feedRequest) returns (feedResponse) {};
+}
+
+message loginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message loginResponse {
+    string token = 1;
+}
+
+
+message logoutRequest {
+    string username = 1;
+}
+
+message logoutResponse {
+    string token = 1;
+}
+
+
+message getUsersToFollowRequest {
+    string username = 1;
+}
+
+message getUsersToFollowResponse {
+    repeated string users = 1;
+}
+
+
+message getUsersToUnFollowRequest {
+    string username = 1;
+}
+
+message getUsersToUnFollowResponse {
+    repeated string users = 1;
+}
+
+
+message startFollowingRequest {
+    string username = 1;
+    string following = 2;
+}
+
+message startFollowingResponse {
+    string message = 1;
+}
+
+
+message stopFollowingRequest {
+    string username = 1;
+    string following = 2;
+}
+
+message stopFollowingResponse {
+    string message = 1;
+}
+
+
+message tweetRequest {
+    string username = 1;
+    string tweet = 2;
+}
+
+message tweetResponse {
+    string message = 1;
+}
+
+
+message feedRequest {
+    string username = 1;
+}
+
+message feedResponse {
+    string feed = 1;
+}
